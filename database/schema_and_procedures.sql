@@ -133,7 +133,7 @@ $$;
 
 
 --=====================================
--- Funcion : insertar precio productor
+-- Funcion : insertar usuario simulado
 --======================================
 CREATE OR REPLACE FUNCTION insertar_usuario_simulado(
     p_nombre TEXT,

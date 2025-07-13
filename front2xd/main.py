@@ -22,14 +22,23 @@ def inject_css():
             }
 
             .main-title {
-                text-align: center;
-                font-size: 3.2rem;
-                font-weight: 700;
-                color: white;
-                text-shadow: 2px 2px 4px #000;
-                margin-top: 1rem;
-                margin-bottom: 2.5rem;
-            }
+            text-align: center;
+            font-size: 3.4rem;
+            font-weight: 800;
+            color: rgba(240, 240, 0, 1);
+            background: rgba(0, 0, 30, 0.3);
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+            backdrop-filter: blur(1px);
+            margin-top: 2rem;
+            margin-bottom: 3rem;
+            transition: all 0.3s ease-in-out;
+        }
+
+        
+
 
             .card-grid {
                 display: grid;
@@ -40,7 +49,7 @@ def inject_css():
             }
 
             .card {
-                background: linear-gradient(145deg, rgba(90, 120, 90, 0.7), rgba(40, 60, 50, 0.15));
+                background: linear-gradient(145deg, rgba(90, 120, 90, 0.8), rgba(40, 60, 50, 0.25));
                 border-radius: 18px;
                 padding: 28px;
                 box-shadow:
@@ -74,7 +83,7 @@ def inject_css():
                 box-shadow:
                     0 6px 25px rgba(0, 100, 0, 0.3),
                     0 10px 40px rgba(0,0,0,0.35);
-                background: linear-gradient(145deg, rgba(120, 180, 120, 0.2), rgba(100, 160, 100, 0.2));
+                background: linear-gradient(145deg, rgba(100, 130, 100, 0.8), rgba(40, 70, 50, 0.25));
             }
 
             .card-icon, .card-title, .card-desc {
@@ -115,10 +124,16 @@ def inject_css():
 
 # ===== FUNCIÓN PARA TARJETAS =====
 def render_card(title, description, icon, route):
+    # Detectar si el ícono es una URL de imagen
+    if isinstance(icon, str) and icon.startswith("http"):
+        icon_html = f'<img src="{icon}" alt="icon" style="width:60px; height:60px; margin-bottom:10px;" />'
+    else:
+        icon_html = f"{icon}"
+
     card_html = f"""
         <a href="/{route}" target="_self" style="text-decoration: none;">
             <div class="card">
-                <div class="card-icon">{icon}</div>
+                <div class="card-icon">{icon_html}</div>
                 <div class="card-title">{title}</div>
                 <div class="card-desc">{description}</div>
             </div>
@@ -126,40 +141,45 @@ def render_card(title, description, icon, route):
     """
     st.markdown(card_html, unsafe_allow_html=True)
 
+
 # ===== MAIN PAGE =====
 def render_home():
     inject_css()
-    st.markdown('<h1 class="main-title">🌱 Plataforma Agrícola Inteligente</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title"> Plataforma Agrícola Inteligente</h1>', unsafe_allow_html=True)
 
     st.markdown('<div class="card-grid">', unsafe_allow_html=True)
 
-    render_card(
-        title="Gestionar Productos y Precios",
-        description="Accede a los registros de productos agrícolas y sus precios a lo largo del tiempo.",
-        icon="📦",
-        route="gestion"
-    )
+    
 
     render_card(
         title="Registrar Nuevos Productos",
         description="Añadir nuevos productos agrícolas, con su precio y fecha de registro.",
-        icon="📝",
+        icon="https://cdn-icons-png.flaticon.com/512/748/748916.png",
         route="registro"
     )
 
     render_card(
         title="Análisis de Precios Históricos",
         description="Consulta los precios históricos de productos agrícolas y compara su evolución.",
-        icon="📈",
+        icon="https://cdn-icons-png.flaticon.com/512/6012/6012178.png",
         route="analisis"
     )
 
     render_card(
         title="Consultar Logs y Actividades",
         description="Ver el historial de actividades y eventos del sistema.",
-        icon="📋",
+        icon="https://cdn-icons-png.flaticon.com/512/4303/4303996.png",
         route="logs"
     )
+
+
+    render_card(
+            title="Simular concurrencia",
+            description="Simula la interaccion de usuarios con el sistema al hacer algunos inserts o updates",
+            icon="https://cdn-icons-png.flaticon.com/512/3598/3598209.png",
+            route="concurrencia"
+        )
+
 
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<footer>© 2025 Plataforma Agrícola · Todos los derechos reservados</footer>', unsafe_allow_html=True)

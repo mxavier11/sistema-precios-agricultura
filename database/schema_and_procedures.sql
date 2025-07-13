@@ -312,9 +312,3 @@ JOIN producto p ON s.producto_id = p.id
 ORDER BY s.variacion DESC;
 
 
--- =============================================
--- NOTA PARA EL EQUIPO:
--- Para auditar correctamente las acciones desde el backend,
--- recuerden ejecutar antes de llamar a procedimientos:
--- SET app.usuario_simulado = 'nombre_usuario';
--- =============================================

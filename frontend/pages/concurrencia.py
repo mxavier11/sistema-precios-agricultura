@@ -23,6 +23,7 @@ def insertar_o_actualizar_precio(p_anio, p_mes, p_nombre_producto, p_ponderado_u
         "p_ponderado_usd_kg": p_ponderado_usd_kg,
         "p_usuario_simulado": p_usuario_simulado
     }
+    supabase.rpc('insertar_usuario_simulado',{"p_nombre":p_usuario_simulado , "p_correo": (p_usuario_simulado + "@gmail.com") }).execute()
     res = supabase.rpc("insertar_precio_productor", params).execute()
     return res
 

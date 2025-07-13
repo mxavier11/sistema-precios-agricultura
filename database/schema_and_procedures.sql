@@ -71,13 +71,14 @@ $$ LANGUAGE plpgsql;
 
 
 -- =============================================
--- PROCEDIMIENTO: insertar producto
+-- FUNCION: insertar producto
 -- =============================================
-CREATE OR REPLACE PROCEDURE insertar_producto(
+CREATE OR REPLACE FUNCTION insertar_producto(
     p_nombre TEXT,
     p_unidad TEXT,
     p_usuario_simulado TEXT
 )
+RETURNS VOID
 LANGUAGE plpgsql AS $$
 DECLARE
     producto_existente_id INT;
@@ -94,7 +95,6 @@ BEGIN
             jsonb_build_object('nombre', p_nombre, 'unidad', p_unidad)
         );
     ELSE
-        -- Si ya existe, no se inserta nada
         RAISE NOTICE 'Producto ya existe: %', p_nombre;
     END IF;
 END;
@@ -102,9 +102,9 @@ $$;
 
 
 -- =============================================
--- PROCEDIMIENTO: insertar precio productor
+-- FUNCION: insertar precio productor
 -- =============================================
-CREATE OR REPLACE PROCEDURE insertar_precio_productor(
+CREATE OR REPLACE FUNCTION insertar_precio_productor(
     p_anio INT,
     p_mes TEXT,
     p_nombre_producto TEXT,
@@ -112,24 +112,27 @@ CREATE OR REPLACE PROCEDURE insertar_precio_productor(
     p_ponderado_usd_kg NUMERIC,
     p_usuario_simulado TEXT
 )
+RETURNS VOID
 LANGUAGE plpgsql AS $$
 DECLARE
-    producto_id INT;
+    v_producto_id INT;
     precio_existente RECORD;
 BEGIN
-    SELECT id INTO producto_id FROM producto WHERE nombre = p_nombre_producto;
+    SELECT id INTO v_producto_id FROM producto WHERE nombre = p_nombre_producto;
 
-    IF producto_id IS NULL THEN
+    IF v_producto_id IS NULL THEN
         RAISE EXCEPTION 'El producto % no existe en la tabla producto', p_nombre_producto;
     END IF;
 
     SELECT * INTO precio_existente
     FROM precio_productor
-    WHERE anio = p_anio AND mes = p_mes AND producto_id = producto_id;
+    WHERE anio = p_anio
+      AND mes = p_mes
+      AND producto_id = v_producto_id;
 
     IF precio_existente IS NULL THEN
         INSERT INTO precio_productor(anio, mes, producto_id, ponderado_usd, ponderado_usd_kg)
-        VALUES (p_anio, p_mes, producto_id, p_ponderado_usd, p_ponderado_usd_kg);
+        VALUES (p_anio, p_mes, v_producto_id, p_ponderado_usd, p_ponderado_usd_kg);
 
         PERFORM registrar_auditoria(
             'precio_productor',
@@ -139,7 +142,7 @@ BEGIN
             jsonb_build_object(
                 'anio', p_anio,
                 'mes', p_mes,
-                'producto_id', producto_id,
+                'producto_id', v_producto_id,
                 'ponderado_usd', p_ponderado_usd,
                 'ponderado_usd_kg', p_ponderado_usd_kg
             )
@@ -161,7 +164,7 @@ BEGIN
             jsonb_build_object(
                 'anio', p_anio,
                 'mes', p_mes,
-                'producto_id', producto_id,
+                'producto_id', v_producto_id,
                 'ponderado_usd', p_ponderado_usd,
                 'ponderado_usd_kg', p_ponderado_usd_kg
             )

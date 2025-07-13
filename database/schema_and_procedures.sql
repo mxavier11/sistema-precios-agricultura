@@ -38,6 +38,10 @@ CREATE INDEX idx_precio_productor_producto_id ON precio_productor(producto_id);
 CREATE INDEX idx_precio_anio_mes_producto ON precio_productor(anio, mes, producto_id);
 
 
+
+
+
+
 -- ---------------------------------------------
 -- Tabla: log_auditoria
 -- ---------------------------------------------
@@ -68,6 +72,29 @@ BEGIN
     VALUES (tabla_afectada, operacion, usuario_simulado, datos_antes, datos_despues);
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+
+--======================
+-- Function para obtener los productos
+--======================
+
+
+CREATE OR REPLACE FUNCTION public.obtener_productos()
+ RETURNS TABLE(id integer, nombre text)
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN QUERY
+    SELECT p.id, p.nombre
+    FROM public.producto p
+    ORDER BY p.nombre;
+END;
+$function$
+
+
+
 
 
 -- =============================================
@@ -101,6 +128,37 @@ END;
 $$;
 
 
+
+
+
+
+--=====================================
+-- Funcion : insertar precio productor
+--======================================
+CREATE OR REPLACE FUNCTION insertar_usuario_simulado(
+    p_nombre TEXT,
+    p_correo TEXT
+)
+RETURNS VOID AS $$
+BEGIN
+    -- Solo insertar si no existe un usuario con ese correo
+    IF NOT EXISTS (
+        SELECT 1 FROM usuario_simulado WHERE correo = p_correo
+    ) THEN
+        INSERT INTO usuario_simulado(nombre, correo)
+        VALUES (p_nombre, p_correo);
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+
+
+
+
+
 -- =============================================
 -- FUNCION: insertar precio productor
 -- =============================================
@@ -112,25 +170,30 @@ CREATE OR REPLACE FUNCTION insertar_precio_productor(
     p_ponderado_usd_kg NUMERIC,
     p_usuario_simulado TEXT
 )
-RETURNS VOID
-LANGUAGE plpgsql AS $$
+RETURNS VOID AS $$
 DECLARE
     v_producto_id INT;
     precio_existente RECORD;
 BEGIN
-    SELECT id INTO v_producto_id FROM producto WHERE nombre = p_nombre_producto;
+    -- Obtener ID del producto
+    SELECT id INTO v_producto_id
+    FROM producto
+    WHERE nombre = p_nombre_producto;
 
     IF v_producto_id IS NULL THEN
         RAISE EXCEPTION 'El producto % no existe en la tabla producto', p_nombre_producto;
     END IF;
 
+    -- Buscar si ya existe registro del precio, bloqueando la fila si existe
     SELECT * INTO precio_existente
     FROM precio_productor
     WHERE anio = p_anio
       AND mes = p_mes
-      AND producto_id = v_producto_id;
+      AND producto_id = v_producto_id
+    FOR UPDATE;  -- ⛔️ Bloquea la fila si existe
 
-    IF precio_existente IS NULL THEN
+    IF NOT FOUND THEN
+        -- Si no existe, insertar
         INSERT INTO precio_productor(anio, mes, producto_id, ponderado_usd, ponderado_usd_kg)
         VALUES (p_anio, p_mes, v_producto_id, p_ponderado_usd, p_ponderado_usd_kg);
 
@@ -147,9 +210,8 @@ BEGIN
                 'ponderado_usd_kg', p_ponderado_usd_kg
             )
         );
-
     ELSE
-        -- Actualiza si ya existe
+        -- Si ya existe, actualizar (con la fila bloqueada previamente)
         UPDATE precio_productor
         SET
             ponderado_usd = p_ponderado_usd,
@@ -171,7 +233,8 @@ BEGIN
         );
     END IF;
 END;
-$$;
+$$ LANGUAGE plpgsql;
+
 
 
 -- =============================================

@@ -237,6 +237,78 @@ $$ LANGUAGE plpgsql;
 
 
 
+
+
+
+--============================
+--function explain promedios
+--============================
+
+
+CREATE OR REPLACE FUNCTION explain_promedio()
+RETURNS TABLE(plan text)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    EXECUTE '
+        EXPLAIN (FORMAT TEXT)
+        SELECT
+            p.nombre,
+            pp.anio,
+            ROUND(AVG(pp.ponderado_usd), 2) AS promedio_usd
+        FROM
+            precio_productor pp
+        JOIN producto p ON pp.producto_id = p.id
+        GROUP BY p.nombre, pp.anio
+        ORDER BY p.nombre, pp.anio
+    ';
+END;
+$$;
+
+--============================
+--function explain_variacion
+--============================
+
+
+
+
+CREATE OR REPLACE FUNCTION explain_variacion()
+RETURNS TABLE(plan text)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    EXECUTE '
+        EXPLAIN (FORMAT TEXT)
+        WITH stats AS (
+            SELECT
+                producto_id,
+                MAX(ponderado_usd) - MIN(ponderado_usd) AS variacion
+            FROM
+                precio_productor
+            GROUP BY producto_id
+        )
+        SELECT
+            p.nombre,
+            s.variacion
+        FROM
+            stats s
+        JOIN producto p ON s.producto_id = p.id
+        ORDER BY s.variacion DESC
+    ';
+END;
+$$;
+
+
+
+
+
+
+
+
+
+
 -- =============================================
 -- TRIGGER FUNCTION: auditoría en DELETE
 -- =============================================
@@ -310,5 +382,9 @@ FROM
     stats s
 JOIN producto p ON s.producto_id = p.id
 ORDER BY s.variacion DESC;
+
+
+
+
 
 

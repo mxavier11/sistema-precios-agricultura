@@ -388,3 +388,52 @@ ORDER BY s.variacion DESC;
 
 
 
+--=========================================
+-- obtener los detalles de la consulta para la variacion
+--=========================================
+
+EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON)
+WITH stats AS (
+    SELECT
+        producto_id,
+        MAX(ponderado_usd) - MIN(ponderado_usd) AS variacion
+    FROM
+        precio_productor
+    GROUP BY producto_id
+)
+SELECT
+    p.nombre,
+    s.variacion
+FROM
+    stats s
+JOIN producto p ON s.producto_id = p.id
+ORDER BY s.variacion DESC;
+
+
+
+
+
+
+
+
+--=========================================
+-- obtener los detalles de la consulta para el promedio de los precios
+--=========================================
+
+
+
+
+EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON)
+SELECT
+    p.nombre,
+    pp.anio,
+    ROUND(AVG(pp.ponderado_usd), 2) AS promedio_usd
+FROM
+    precio_productor pp
+JOIN producto p ON pp.producto_id = p.id
+GROUP BY p.nombre, pp.anio
+ORDER BY p.nombre, pp.anio;
+
+
+
+

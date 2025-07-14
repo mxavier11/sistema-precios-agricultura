@@ -4,6 +4,7 @@ import pandas as pd
 import altair as alt
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from PIL import Image
 
 # ======== CARGA DE VARIABLES .ENV ========
 load_dotenv()
@@ -187,6 +188,50 @@ def main():
         st.altair_chart(chart2, use_container_width=True)
     else:
         st.info("No hay datos disponibles para variación.")
+
+    #obtener planes explain...
+
+    def obtener_explain_promedio():
+        res = supabase.rpc("explain_promedio").execute()
+        if res.data is None:
+            st.error("No se pudo obtener el plan de ejecución.")
+            return []
+        return [line['plan'] for line in res.data]
+
+    def obtener_explain_variacion():
+        res = supabase.rpc("explain_variacion").execute()
+        if res.data is None:
+            st.error("No se pudo obtener el plan de ejecución.")
+            return []
+        return [line['plan'] for line in res.data]
+
+
+
+    
+
+
+
+
+# En tu función principal o página
+    with st.expander("📊 Ver plan de ejecución para variación de precios"):
+        
+            
+        if st.button("Mostrar EXPLAIN variación"):
+            plan = obtener_explain_variacion()
+            
+            plan2= obtener_explain_promedio()
+            if plan and plan2:
+                st.write("consulta de promedio:")
+                st.code("\n".join(plan2), language="sql")
+                st.image(Image.open("pages/figs/variacion.png"))
+
+                st.write("consulta de variacion:")
+                st.code("\n".join(plan), language="sql")
+                st.image(Image.open("pages/figs/promedio.png"))
+            else:
+                st.warning("No se recibió ningún plan.")
+
+
 
 
         # ===================== BOTÓN DE REGRESO =======================
